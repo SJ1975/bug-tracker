@@ -10,7 +10,7 @@ public class BugResponse {
     private String description;
     private BugStatus status;
     private Priority priority;
-    private Long reporterId;
+//    private Long reporterId;
 
     // getters & setters
 
@@ -54,11 +54,11 @@ public class BugResponse {
         this.priority = priority;
     }
 
-    public Long getReporterId() {
-        return reporterId;
-    }
-
-    public void setReporterId(Long reporterId) {
-        this.reporterId = reporterId;
-    }
+//    public Long getReporterId() {
+//        return reporterId;
+//    }
+//
+//    public void setReporterId(Long reporterId) {
+//        this.reporterId = reporterId;
+//    }
 }

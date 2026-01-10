@@ -15,7 +15,7 @@ public class CreateBugRequest {
     private Priority priority;
 
     @NotNull
-    private Long reporterId;
+//    private Long reporterId;
 
     @NotNull
     private Long projectId;
@@ -46,13 +46,13 @@ public class CreateBugRequest {
         this.priority = priority;
     }
 
-    public Long getReporterId() {
-        return reporterId;
-    }
-
-    public void setReporterId(Long reporterId) {
-        this.reporterId = reporterId;
-    }
+//    public Long getReporterId() {
+//        return reporterId;
+//    }
+//
+//    public void setReporterId(Long reporterId) {
+//        this.reporterId = reporterId;
+//    }
 
     public Long getProjectId() {
         return projectId;

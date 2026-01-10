@@ -7,6 +7,7 @@ import com.bugtracker.bug_tracker.application.dto.CreateBugCommand;
 import com.bugtracker.bug_tracker.application.usecase.ChangeBugStatusUseCase;
 import com.bugtracker.bug_tracker.application.usecase.CreateBugUseCase;
 import com.bugtracker.bug_tracker.domain.model.Bug;
+import com.bugtracker.bug_tracker.security.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,12 +32,14 @@ public class BugController {
     public ResponseEntity<BugResponse> createBug(
             @Valid @RequestBody CreateBugRequest request
     ) {
+        Long reporterId = SecurityUtils.currentUserId();
+
         Bug bug = createBugUseCase.execute(
                 new CreateBugCommand(
                         request.getTitle(),
                         request.getDescription(),
                         request.getPriority(),
-                        request.getReporterId(),
+                        reporterId,        // --> From JWT                 //[request.getReporterId(),]
                         request.getProjectId()
                 )
         );
@@ -69,7 +72,7 @@ public class BugController {
         response.setDescription(bug.getDescription());
         response.setStatus(bug.getStatus());
         response.setPriority(bug.getPriority());
-        response.setReporterId(bug.getReporterId());
+//        response.setReporterId(bug.getReporterId());
         return response;
     }
 }
