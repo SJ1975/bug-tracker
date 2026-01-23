@@ -2,8 +2,10 @@ package com.bugtracker.bug_tracker.api.error;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
@@ -31,6 +33,15 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleAccessDenied(AccessDeniedException ex) {
+        return new ApiError(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiError> handleGeneric(RuntimeException ex) {
         return ResponseEntity.internalServerError()
@@ -39,4 +50,6 @@ public class GlobalExceptionHandler {
                         ex.getMessage()
                 ));
     }
+
+
 }

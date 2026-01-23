@@ -10,6 +10,9 @@ import com.bugtracker.bug_tracker.persistence.repository.BugJpaRepository;
 import com.bugtracker.bug_tracker.persistence.repository.ProjectJpaRepository;
 import com.bugtracker.bug_tracker.persistence.repository.UserJpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Repository
 public class BugRepositoryImpl implements BugRepository {
@@ -37,8 +40,24 @@ public class BugRepositoryImpl implements BugRepository {
         return BugMapper.toDomain(entity);
     }
 
+//    @Override
+//    public void save(Bug bug) {
+//
+//        UserEntity reporter =
+//                userJpaRepository.getReferenceById(bug.getReporterId());
+//
+//        ProjectEntity project =
+//                projectJpaRepository.getReferenceById(bug.getProjectId());
+//
+//        BugEntity entity =
+//                BugMapper.toEntity(bug, reporter, project);
+//
+//        bugJpaRepository.save(entity);
+//    }
+
     @Override
-    public Bug save(Bug bug) {
+    @Transactional
+    public Bug create(Bug bug) {
 
         UserEntity reporter =
                 userJpaRepository.getReferenceById(bug.getReporterId());
@@ -46,12 +65,77 @@ public class BugRepositoryImpl implements BugRepository {
         ProjectEntity project =
                 projectJpaRepository.getReferenceById(bug.getProjectId());
 
-        BugEntity entity =
-                BugMapper.toEntity(bug, reporter, project);
+        UserEntity developer =
+                bug.getDeveloperId() == null ? null :
+                        userJpaRepository.getReferenceById(bug.getDeveloperId());
 
-        return BugMapper.toDomain(
-                bugJpaRepository.save(entity)
+        UserEntity tester =
+                bug.getTesterId() == null ? null :
+                        userJpaRepository.getReferenceById(bug.getTesterId());
+
+        BugEntity entity =
+                BugMapper.toEntity(bug, reporter, project, developer, tester);
+
+        BugEntity saved = bugJpaRepository.save(entity);
+
+        return BugMapper.toDomain(saved);
+    }
+
+
+    @Override
+    @Transactional
+    public void save(Bug bug) {
+
+        BugEntity entity = bugJpaRepository.findById(bug.getId())
+                .orElseThrow(() -> new IllegalStateException("Bug not found"));
+
+        entity.setStatus(bug.getStatus());
+        entity.setPriority(bug.getPriority());
+
+        entity.setDeveloper(
+                bug.getDeveloperId() == null
+                        ? null
+                        : userJpaRepository.getReferenceById(bug.getDeveloperId())
+        );
+
+        entity.setTester(
+                bug.getTesterId() == null
+                        ? null
+                        : userJpaRepository.getReferenceById(bug.getTesterId())
         );
     }
+
+    @Override
+    public List<Bug> findAll() {
+        return bugJpaRepository.findAll()
+                .stream()
+                .map(BugMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Bug> findByReporterId(Long reporterId) {
+        return bugJpaRepository.findByReporterId(reporterId)
+                .stream()
+                .map(BugMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Bug> findByDeveloperId(Long developerId) {
+        return bugJpaRepository.findByDeveloperId(developerId)
+                .stream()
+                .map(BugMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Bug> findByTesterId(Long testerId) {
+        return bugJpaRepository.findByTesterId(testerId)
+                .stream()
+                .map(BugMapper::toDomain)
+                .toList();
+    }
+
 }
 

@@ -1,20 +1,18 @@
 package com.bugtracker.bug_tracker.api.controller;
 
-import com.bugtracker.bug_tracker.api.dto.AssignBugRequest;
-import com.bugtracker.bug_tracker.api.dto.BugResponse;
-import com.bugtracker.bug_tracker.api.dto.ChangeBugStatusRequest;
-import com.bugtracker.bug_tracker.api.dto.CreateBugRequest;
+import com.bugtracker.bug_tracker.api.dto.*;
 import com.bugtracker.bug_tracker.application.dto.CreateBugCommand;
-import com.bugtracker.bug_tracker.application.usecase.AssignBugUseCase;
-import com.bugtracker.bug_tracker.application.usecase.ChangeBugStatusUseCase;
-import com.bugtracker.bug_tracker.application.usecase.CreateBugUseCase;
+import com.bugtracker.bug_tracker.application.usecase.*;
 import com.bugtracker.bug_tracker.domain.model.Bug;
 import com.bugtracker.bug_tracker.security.CustomUserDetails;
 import com.bugtracker.bug_tracker.security.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bugs")
@@ -23,16 +21,23 @@ public class BugController {
 
     private final CreateBugUseCase createBugUseCase;
     private final ChangeBugStatusUseCase changeBugStatusUseCase;
-    private final AssignBugUseCase assignBugUseCase;
+    private final AssignDeveloperUseCase assignDeveloperUseCase;
+    private final AssignTesterUseCase assignTesterUseCase;
+    private final BugQueryService bugQueryService;
 
     public BugController(
             CreateBugUseCase createBugUseCase,
             ChangeBugStatusUseCase changeBugStatusUseCase,
-            AssignBugUseCase assignBugUseCase
+            AssignDeveloperUseCase assignDeveloperUseCase,
+            AssignTesterUseCase assignTesterUseCase,
+            BugQueryService bugQueryService
+
     ) {
         this.createBugUseCase = createBugUseCase;
         this.changeBugStatusUseCase = changeBugStatusUseCase;
-        this.assignBugUseCase = assignBugUseCase;
+        this.assignDeveloperUseCase = assignDeveloperUseCase;
+        this.assignTesterUseCase = assignTesterUseCase;
+        this.bugQueryService = bugQueryService;
     }
 
     // ================= CREATE BUG =================
@@ -42,6 +47,8 @@ public class BugController {
     public BugResponse createBug(
             @Valid @RequestBody CreateBugRequest request
     ) {
+
+        CustomUserDetails user = SecurityUtils.currentUser();
         Long reporterId = SecurityUtils.currentUserId();
 
         Bug bug = createBugUseCase.execute(
@@ -50,12 +57,24 @@ public class BugController {
                         request.getDescription(),
                         request.getPriority(),
                         reporterId,
-                        request.getProjectId()
+                        request.getProjectId(),
+                        user.getRole()
                 )
         );
 
         return BugResponse.from(bug);
     }
+
+    private BugResponse toResponse(Bug bug) {
+        BugResponse response = new BugResponse();
+        response.setId(bug.getId());
+        response.setTitle(bug.getTitle());
+        response.setDescription(bug.getDescription());
+        response.setStatus(bug.getStatus());
+        response.setPriority(bug.getPriority());
+        return response;
+    }
+
 
     // ================= CHANGE STATUS =================
 
@@ -74,21 +93,69 @@ public class BugController {
                 user.getRole()
         );
     }
-
-    @PatchMapping("/{id}/assign")
+    @PatchMapping("/{id}/assign-developer")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void assignBug(
+    public void assignDeveloper(
             @PathVariable Long id,
-            @Valid @RequestBody AssignBugRequest request
+            @Valid @RequestBody AssignDeveloperRequest request
     ) {
         CustomUserDetails user = SecurityUtils.currentUser();
 
-        assignBugUseCase.execute(
+        assignDeveloperUseCase.execute(
                 id,
-                request.getAssigneeId(),
+                request.getDeveloperId(),
                 user.getUserId(),
                 user.getRole()
         );
     }
+
+    @PatchMapping("/{id}/assign-tester")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignTester(
+            @PathVariable Long id,
+            @Valid @RequestBody AssignTesterRequest request
+    ) {
+        CustomUserDetails user = SecurityUtils.currentUser();
+
+        assignTesterUseCase.execute(
+                id,
+                request.getTesterId(),
+                user.getUserId(),
+                user.getRole()
+        );
+    }
+
+
+    @GetMapping
+    public ResponseEntity<List<BugResponse>> getBugs() {
+
+        CustomUserDetails user = SecurityUtils.currentUser();
+
+        List<Bug> bugs = bugQueryService.findBugsForUser(
+                user.getUserId(),
+                user.getRole()
+        );
+
+        List<BugResponse> response = bugs.stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BugResponse> getBugById(@PathVariable Long id) {
+
+        CustomUserDetails user = SecurityUtils.currentUser();
+
+        Bug bug = bugQueryService.findBugByIdForUser(
+                id,
+                user.getUserId(),
+                user.getRole()
+        );
+
+        return ResponseEntity.ok(toResponse(bug));
+    }
+
 
 }

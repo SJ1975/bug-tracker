@@ -78,12 +78,20 @@ public class BugEntity {
         this.reporter = reporter;
     }
 
-    public UserEntity getAssignee() {
-        return assignee;
+    public UserEntity getDeveloper() {
+        return developer;
     }
 
-    public void setAssignee(UserEntity assignee) {
-        this.assignee = assignee;
+    public void setDeveloper(UserEntity developer) {
+        this.developer = developer;
+    }
+
+    public UserEntity getTester() {
+        return tester;
+    }
+
+    public void setTester(UserEntity tester) {
+        this.tester = tester;
     }
 
     public ProjectEntity getProject() {
@@ -107,12 +115,23 @@ public class BugEntity {
     private UserEntity reporter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignee_id")
-    private UserEntity assignee;
+    @JoinColumn(name = "developer_id")
+    private UserEntity developer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tester_id")
+    private UserEntity tester;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private ProjectEntity project;
 
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

@@ -4,9 +4,12 @@ import com.bugtracker.bug_tracker.application.dto.CreateBugCommand;
 import com.bugtracker.bug_tracker.application.port.BugRepository;
 import com.bugtracker.bug_tracker.application.port.ProjectRepository;
 import com.bugtracker.bug_tracker.application.port.UserRepository;
+import com.bugtracker.bug_tracker.domain.enums.BugStatus;
+import com.bugtracker.bug_tracker.domain.enums.Role;
 import com.bugtracker.bug_tracker.domain.model.Bug;
 import com.bugtracker.bug_tracker.domain.model.Project;
 import com.bugtracker.bug_tracker.domain.model.User;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,18 +33,20 @@ public class CreateBugUseCase {
     @Transactional
     public Bug execute(CreateBugCommand command) {
 
-        Project project = projectRepository.load(command.projectId());
-
-        User reporter = userRepository.load(command.reporterId());
+        if (command.actorRole() != Role.REPORTER) {
+            throw new AccessDeniedException("Only REPORTER can create bugs");
+        }
 
         Bug bug = new Bug(
-                null,
                 command.title(),
                 command.description(),
                 command.priority(),
-                reporter.getId(),
-                project.getId()
+                command.reporterId(),
+                command.projectId()
         );
-        return bugRepository.save(bug);
+
+
+        return bugRepository.create(bug);
     }
+
 }

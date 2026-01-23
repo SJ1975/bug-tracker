@@ -23,17 +23,53 @@ public class ChangeBugStatusUseCase {
     public void execute(
             Long bugId,
             BugStatus newStatus,
-            Long currentUserId,
-            Role currentUserRole
+            Long actorId,
+            Role actorRole
     ) {
         Bug bug = bugRepository.load(bugId);
 
-        if (currentUserRole != Role.ADMIN &&
-                !bug.getReporterId().equals(currentUserId)) {
-            throw new AccessDeniedException("Not allowed to change this bug");
+        // 1️⃣ Ownership + RBAC
+        validateOwnership(bug, actorId, actorRole);
+
+        // 2️⃣ Lifecycle + role rules (domain)
+        bug.changeStatus(newStatus, actorRole);
+
+        // 3️⃣ Persist
+        bugRepository.save(bug);
+    }
+
+    private void validateOwnership(Bug bug, Long actorId, Role actorRole) {
+
+        // ADMIN can do anything
+        if (actorRole == Role.ADMIN) {
+            return;
         }
 
-        bug.changeStatus(newStatus);
-        bugRepository.save(bug);
+        switch (actorRole) {
+
+            case DEVELOPER -> {
+                if (bug.getDeveloperId() == null) {
+                    throw new AccessDeniedException("No developer assigned to this bug");
+                }
+                if (!actorId.equals(bug.getDeveloperId())) {
+                    throw new AccessDeniedException("Only assigned developer can do this");
+                }
+            }
+
+            case TESTER -> {
+                if (bug.getTesterId() == null) {
+                    throw new AccessDeniedException("No tester assigned to this bug");
+                }
+                if (!actorId.equals(bug.getTesterId())) {
+                    throw new AccessDeniedException("Only assigned tester can do this");
+                }
+            }
+
+            case REPORTER -> {
+                throw new AccessDeniedException(
+                        "Reporter is not allowed to change bug status"
+                );
+            }
+        }
     }
 }
