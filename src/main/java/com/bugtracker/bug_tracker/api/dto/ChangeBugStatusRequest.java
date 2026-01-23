@@ -9,7 +9,7 @@ public class ChangeBugStatusRequest {
     private BugStatus status;
 
     @NotNull
-    private Long actorId;
+//    private Long actorId;
 
     // getters & setters
 
@@ -21,11 +21,11 @@ public class ChangeBugStatusRequest {
         this.status = status;
     }
 
-    public Long getActorId() {
-        return actorId;
-    }
-
-    public void setActorId(Long actorId) {
-        this.actorId = actorId;
-    }
+//    public Long getActorId() {
+//        return actorId;
+//    }
+//
+//    public void setActorId(Long actorId) {
+//        this.actorId = actorId;
+//    }
 }

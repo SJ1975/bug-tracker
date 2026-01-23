@@ -2,7 +2,6 @@ package com.bugtracker.bug_tracker.domain.model;
 
 import com.bugtracker.bug_tracker.domain.enums.BugStatus;
 import com.bugtracker.bug_tracker.domain.enums.Priority;
-import com.bugtracker.bug_tracker.domain.enums.Role;
 import com.bugtracker.bug_tracker.domain.rules.BugLifecycleRules;
 
 import java.time.LocalDateTime;
@@ -70,8 +69,8 @@ public class Bug {
         return projectId;
     }
 
-    public void changeStatus(BugStatus newStatus, Role actorRole) {
-        BugLifecycleRules.validate(this.status, newStatus, actorRole);
+    public void changeStatus(BugStatus newStatus) {
+        BugLifecycleRules.validate(this.status, newStatus);
         this.status = newStatus;
     }
 

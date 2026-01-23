@@ -2,6 +2,7 @@ package com.bugtracker.bug_tracker.api.dto;
 
 import com.bugtracker.bug_tracker.domain.enums.BugStatus;
 import com.bugtracker.bug_tracker.domain.enums.Priority;
+import com.bugtracker.bug_tracker.domain.model.Bug;
 
 public class BugResponse {
 
@@ -10,9 +11,19 @@ public class BugResponse {
     private String description;
     private BugStatus status;
     private Priority priority;
-//    private Long reporterId;
+
+    public static BugResponse from(Bug bug) {
+        BugResponse response = new BugResponse();
+        response.id = bug.getId();
+        response.title = bug.getTitle();
+        response.description = bug.getDescription();
+        response.status = bug.getStatus();
+        response.priority = bug.getPriority();
+        return response;
+    }
 
     // getters & setters
+
 
     public Long getId() {
         return id;
@@ -53,12 +64,4 @@ public class BugResponse {
     public void setPriority(Priority priority) {
         this.priority = priority;
     }
-
-//    public Long getReporterId() {
-//        return reporterId;
-//    }
-//
-//    public void setReporterId(Long reporterId) {
-//        this.reporterId = reporterId;
-//    }
 }

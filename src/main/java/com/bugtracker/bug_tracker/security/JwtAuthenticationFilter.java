@@ -32,7 +32,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             Claims claims = jwtUtil.validateToken(token);            //-----.getBody();
-
             String email = claims.getSubject();
             CustomUserDetails user =
                     (CustomUserDetails) userDetailsService.loadUserByUsername(email);

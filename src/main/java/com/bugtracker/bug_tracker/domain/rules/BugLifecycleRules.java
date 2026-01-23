@@ -7,21 +7,16 @@ public final class BugLifecycleRules {
 
     private BugLifecycleRules() {}
 
-    public static void validate(
-            BugStatus current,
-            BugStatus next,
-            Role role
-    ) {
-        if (current == BugStatus.CLOSED && next != BugStatus.REOPENED) {
-            throw new IllegalStateException(
-                    "Closed bugs can only be reopened"
-            );
+    public static void validate(BugStatus current, BugStatus next) {
+
+        if (current == BugStatus.CLOSED) {
+            throw new IllegalStateException("Closed bug cannot be changed");
         }
 
-        if (next == BugStatus.RESOLVED && role != Role.DEVELOPER) {
-            throw new IllegalStateException(
-                    "Only developers can resolve bugs"
-            );
+        if (current == BugStatus.OPEN && next == BugStatus.OPEN) {
+            throw new IllegalStateException("Bug is already OPEN");
         }
+
+        // add more state-only rules here
     }
 }
