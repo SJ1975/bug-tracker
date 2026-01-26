@@ -8,6 +8,5 @@ public record CreateBugCommand(
         String description,
         Priority priority,
         Long reporterId,
-        Long projectId,
-        Role actorRole
+        Long projectId
 ) {}

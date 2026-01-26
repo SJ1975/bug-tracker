@@ -1,10 +1,12 @@
 package com.bugtracker.bug_tracker.application.usecase;
 
+import com.bugtracker.bug_tracker.application.port.BugAuditRepository;
 import com.bugtracker.bug_tracker.application.port.BugRepository;
 import com.bugtracker.bug_tracker.application.port.UserRepository;
 import com.bugtracker.bug_tracker.domain.enums.BugStatus;
 import com.bugtracker.bug_tracker.domain.enums.Role;
 import com.bugtracker.bug_tracker.domain.model.Bug;
+import com.bugtracker.bug_tracker.domain.model.BugAuditLog;
 import com.bugtracker.bug_tracker.domain.model.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChangeBugStatusUseCase {
 
     private final BugRepository bugRepository;
+    private final BugAuditRepository auditRepository;
 
-    public ChangeBugStatusUseCase(BugRepository bugRepository) {
+    public ChangeBugStatusUseCase(
+            BugRepository bugRepository,
+            BugAuditRepository auditRepository
+    ) {
         this.bugRepository = bugRepository;
+        this.auditRepository = auditRepository;
     }
 
     @Transactional
@@ -28,14 +35,29 @@ public class ChangeBugStatusUseCase {
     ) {
         Bug bug = bugRepository.load(bugId);
 
-        // 1️⃣ Ownership + RBAC
+        // Ownership + RBAC
         validateOwnership(bug, actorId, actorRole);
 
-        // 2️⃣ Lifecycle + role rules (domain)
+        // Capture OLD value (IMPORTANT)
+        BugStatus oldStatus = bug.getStatus();
+
+        // Lifecycle + role rules (domain)
         bug.changeStatus(newStatus, actorRole);
 
-        // 3️⃣ Persist
+        // Persist bug
         bugRepository.save(bug);
+
+        // Audit log (SIDE EFFECT)
+        auditRepository.save(
+                new BugAuditLog(
+                        bug.getId(),
+                        "STATUS_CHANGED",
+                        oldStatus.name(),
+                        newStatus.name(),
+                        actorId,
+                        actorRole.name()
+                )
+        );
     }
 
     private void validateOwnership(Bug bug, Long actorId, Role actorRole) {
@@ -72,4 +94,6 @@ public class ChangeBugStatusUseCase {
             }
         }
     }
+
+
 }

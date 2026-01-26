@@ -1,10 +1,12 @@
 package com.bugtracker.bug_tracker.application.usecase;
 
+import com.bugtracker.bug_tracker.application.port.BugAuditRepository;
 import com.bugtracker.bug_tracker.application.port.BugRepository;
 import com.bugtracker.bug_tracker.application.port.UserRepository;
 import com.bugtracker.bug_tracker.domain.enums.BugStatus;
 import com.bugtracker.bug_tracker.domain.enums.Role;
 import com.bugtracker.bug_tracker.domain.model.Bug;
+import com.bugtracker.bug_tracker.domain.model.BugAuditLog;
 import com.bugtracker.bug_tracker.domain.model.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -15,13 +17,16 @@ public class AssignDeveloperUseCase {
 
     private final BugRepository bugRepository;
     private final UserRepository userRepository;
+    private final BugAuditRepository auditRepository;
 
     public AssignDeveloperUseCase(
             BugRepository bugRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            BugAuditRepository auditRepository
     ) {
         this.bugRepository = bugRepository;
         this.userRepository = userRepository;
+        this.auditRepository = auditRepository;
     }
 
     @Transactional
@@ -55,10 +60,25 @@ public class AssignDeveloperUseCase {
             bug.changeStatus(BugStatus.IN_PROGRESS, Role.ADMIN);
         }
 
+        Long oldDeveloperId = bug.getDeveloperId();
+
         // 6️⃣ Assign developer
         bug.assignDeveloper(developerId);
 
         // 7️⃣ Persist
         bugRepository.save(bug);
+
+        auditRepository.save(
+                new BugAuditLog(
+                        bug.getId(),
+                        "DEVELOPER_ASSIGNED",
+                        oldDeveloperId == null ? null : oldDeveloperId.toString(),
+                        developerId.toString(),
+                        actorId,
+                        actorRole.name()
+                )
+        );
+
     }
+
 }
