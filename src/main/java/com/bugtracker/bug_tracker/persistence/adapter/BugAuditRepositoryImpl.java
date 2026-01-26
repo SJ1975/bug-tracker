@@ -4,6 +4,8 @@ import com.bugtracker.bug_tracker.application.port.BugAuditRepository;
 import com.bugtracker.bug_tracker.domain.model.BugAuditLog;
 import com.bugtracker.bug_tracker.persistence.entity.BugAuditLogEntity;
 import com.bugtracker.bug_tracker.persistence.repository.BugAuditJpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -29,10 +31,27 @@ public class BugAuditRepositoryImpl implements BugAuditRepository {
         jpaRepository.save(entity);
     }
 
+//    @Override
+//    public List<BugAuditLog> findByBugId(Long bugId) {
+//        return jpaRepository.findByBugIdOrderByCreatedAtAsc(bugId)
+//                .stream()
+//                .map(entity -> new BugAuditLog(
+//                        entity.getBugId(),
+//                        entity.getAction(),
+//                        entity.getOldValue(),
+//                        entity.getNewValue(),
+//                        entity.getActorId(),
+//                        entity.getActorRole()
+//                ))
+//                .toList();
+//    }
+
     @Override
-    public List<BugAuditLog> findByBugId(Long bugId) {
-        return jpaRepository.findByBugIdOrderByCreatedAtAsc(bugId)
-                .stream()
+    public Page<BugAuditLog> findByBugId(
+            Long bugId,
+            Pageable pageable
+    ) {
+        return jpaRepository.findByBugId(bugId, pageable)
                 .map(entity -> new BugAuditLog(
                         entity.getBugId(),
                         entity.getAction(),
@@ -40,8 +59,7 @@ public class BugAuditRepositoryImpl implements BugAuditRepository {
                         entity.getNewValue(),
                         entity.getActorId(),
                         entity.getActorRole()
-                ))
-                .toList();
+                ));
     }
 
 

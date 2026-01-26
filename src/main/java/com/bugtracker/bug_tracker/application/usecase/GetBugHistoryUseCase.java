@@ -5,6 +5,8 @@ import com.bugtracker.bug_tracker.application.port.BugRepository;
 import com.bugtracker.bug_tracker.domain.enums.Role;
 import com.bugtracker.bug_tracker.domain.model.Bug;
 import com.bugtracker.bug_tracker.domain.model.BugAuditLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +26,13 @@ public class GetBugHistoryUseCase {
         this.auditRepository = auditRepository;
     }
 
-    public List<BugAuditLog> execute(
+    public Page<BugAuditLog> execute(
             Long bugId,
             Long actorId,
-            Role actorRole
+            Role actorRole,
+            Pageable pageable
     ) {
+
         Bug bug = bugRepository.load(bugId);
 
         // 🔐 RBAC VISIBILITY RULES
@@ -54,7 +58,7 @@ public class GetBugHistoryUseCase {
             }
         }
 
-        return auditRepository.findByBugId(bugId);
+        return auditRepository.findByBugId(bugId, pageable);
     }
 }
 

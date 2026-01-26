@@ -57,9 +57,10 @@ public class BugController {
                         request.getDescription(),
                         request.getPriority(),
                         reporterId,
-                        request.getProjectId(),
-                        user.getRole()
-                )
+                        request.getProjectId()
+                ),
+                user.getUserId(),
+                user.getRole()
         );
 
         return BugResponse.from(bug);
